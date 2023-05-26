@@ -4,40 +4,52 @@ import todoimg from "../img/checklist.png";
 import "./ToDoApp.css";
 import AddIcon from "@material-ui/icons/AddRounded";
 import DeleteIcon from "@material-ui/icons/DeleteRounded";
+import { Edit } from "@material-ui/icons";
 import { Alert } from "@mui/material";
 
 const ToDoApp = () => {
   const [inputData, setInputData] = useState("");
   const [item, setItem] = useState([]);
   const [showAlert, setShowAlert] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
 
-  const AddItem = () => {
+  const addItem = () => {
     if (!inputData) {
-      alert("Please add Item");
+      alert("Please add an item");
     } else {
-      setItem([...item, { name: inputData, completed: false }]);
-      setInputData("");
+      if (editingItem !== null) {
+        const updatedItems = item.map((elem, ind) => {
+          if (ind === editingItem) {
+            return { ...elem, name: inputData };
+          }
+          return elem;
+        });
+        setItem(updatedItems);
+        setInputData("");
+        setEditingItem(null);
+      } else {
+        setItem([...item, { name: inputData, completed: false }]);
+        setInputData("");
+      }
     }
   };
 
-  // Delete item
   const deleteItem = (id) => {
-    const updatedItems = item.map((elem, ind) => {
-      if (ind === id) {
-        return { ...elem, completed: !elem.completed };
-      }
-      return elem;
-    });
+    const updatedItems = item.filter((_, ind) => ind !== id);
     setItem(updatedItems);
   };
 
-  // Remove all
+  const editItem = (elem, id) => {
+    setInputData(elem.name);
+    setEditingItem(id);
+  };
+
   const removeAll = () => {
     setItem([]);
     setShowAlert(true);
     setTimeout(() => {
       setShowAlert(false);
-    }, 2000); // Delay for 2 seconds (2000 milliseconds)
+    }, 2000);
   };
 
   return (
@@ -76,26 +88,41 @@ const ToDoApp = () => {
             />
             <motion.button
               className="add-btn"
-              title="Add Item"
-              onClick={AddItem}
+              title={editingItem !== null ? "Edit Item" : "Add Item"}
+              onClick={addItem}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
-              <AddIcon />
+              {editingItem !== null ? <Edit /> : <AddIcon />}
             </motion.button>
           </div>
         </div>
         <div className="show-items">
-          {item.map((elem, ind) => {
-            return (
-              <motion.div
-                className="each-item"
-                key={ind}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
+          {item.map((elem, ind) => (
+            <motion.div
+              className="each-item"
+              key={ind}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h3
+                style={{
+                  textDecoration: elem.completed ? "line-through" : "none",
+                }}
               >
-                <h3 style={{ textDecoration: elem.completed ? "line-through" : "none" }}>{elem.name}</h3>
+                {elem.name}
+              </h3>
+              <div className="menu-btn">
+                <motion.button
+                  className="del-btn"
+                  title="Edit Item"
+                  onClick={() => editItem(elem, ind)}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Edit />
+                </motion.button>
                 <motion.button
                   className="del-btn"
                   title="Delete Item"
@@ -105,9 +132,9 @@ const ToDoApp = () => {
                 >
                   <DeleteIcon />
                 </motion.button>
-              </motion.div>
-            );
-          })}
+              </div>
+            </motion.div>
+          ))}
         </div>
         <div className="show-items">
           <motion.button
